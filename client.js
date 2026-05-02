@@ -27,6 +27,7 @@ const CONFIG = Object.freeze({
   password: process.env.BYD_PASSWORD || '',
   countryCode: process.env.BYD_COUNTRY_CODE || 'NL',
   language: process.env.BYD_LANGUAGE || 'en',
+  appName: process.env.BYD_APP_NAME || 'byd-re',
   imeiMd5: (process.env.BYD_IMEI_MD5 || md5Hex(process.env.BYD_USERNAME || '')).toUpperCase(),
   vin: process.env.BYD_VIN || '',
   networkType: process.env.BYD_NETWORK_TYPE || 'wifi',
@@ -282,6 +283,8 @@ function buildLoginRequest(nowMs) {
   const serviceTime = String(Date.now());
 
   const inner = {
+    agreeStatus: '0',
+    agreementType: '[1,2]',
     appInnerVersion: CONFIG.appInnerVersion,
     appVersion: CONFIG.appVersion,
     deviceName: `${CONFIG.mobileBrand}${CONFIG.mobileModel}`,
@@ -303,6 +306,7 @@ function buildLoginRequest(nowMs) {
 
   const signFields = {
     ...inner,
+    appName: CONFIG.appName,
     countryCode: CONFIG.countryCode,
     functionType: 'pwdLogin',
     identifier: CONFIG.username,
@@ -314,6 +318,7 @@ function buildLoginRequest(nowMs) {
   const sign = sha1Mixed(buildSignString(signFields, md5Hex(CONFIG.password)));
 
   const outer = {
+    appName: CONFIG.appName,
     countryCode: CONFIG.countryCode,
     encryData,
     functionType: 'pwdLogin',
