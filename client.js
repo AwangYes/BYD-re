@@ -27,7 +27,7 @@ const CONFIG = Object.freeze({
   password: process.env.BYD_PASSWORD || '',
   countryCode: process.env.BYD_COUNTRY_CODE || 'NL',
   language: process.env.BYD_LANGUAGE || 'en',
-  imeiMd5: process.env.BYD_IMEI_MD5 || '00000000000000000000000000000000',
+  imeiMd5: (process.env.BYD_IMEI_MD5 || md5Hex(process.env.BYD_USERNAME || '')).toUpperCase(),
   vin: process.env.BYD_VIN || '',
   networkType: process.env.BYD_NETWORK_TYPE || 'wifi',
   // See: https://apkpure.com/byd/com.byd.bydautolink
