@@ -34,10 +34,10 @@ jobs:
           yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1
           $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
 
+      - name: Create local.properties
+        run: echo "sdk.dir=$HOME/android-sdk" > xposed/local.properties
+
       - name: Build debug APK
-        env:
-          ANDROID_HOME: $HOME/android-sdk
-          ANDROID_SDK_ROOT: $HOME/android-sdk
         run: |
           cd xposed
           chmod +x gradlew
