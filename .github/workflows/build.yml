@@ -37,13 +37,19 @@ jobs:
       - name: Build debug APK
         env:
           ANDROID_HOME: $HOME/android-sdk
+          ANDROID_SDK_ROOT: $HOME/android-sdk
         run: |
           cd xposed
           chmod +x gradlew
           ./gradlew assembleDebug
 
+      - name: List build outputs
+        run: |
+          ls -la xposed/app/build/outputs/apk/debug/
+          find xposed/app/build/outputs -name "*.apk" 2>/dev/null
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: BYD-Xposed-Hook-debug
-          path: xposed/app/build/outputs/apk/debug/
+          path: xposed/app/build/outputs/apk/debug/*.apk
