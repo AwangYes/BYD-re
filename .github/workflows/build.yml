@@ -46,4 +46,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: BYD-Xposed-Hook-debug
-          path: xposed/app/build/outputs/apk/debug/*.apk
+          path: xposed/app/build/outputs/apk/debug/
