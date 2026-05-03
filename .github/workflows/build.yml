@@ -50,11 +50,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
-          release_name: BYD Xposed Hook v1.0.${{ github.run_number }}
+          name: BYD Xposed Hook v1.0.${{ github.run_number }}
           draft: false
           prerelease: false
-          artifacts: xposed/build/outputs/apk/debug/*.apk
-          artifact_errors_fail_upload: true
-          generate_release_notes: true
+          files: xposed/build/outputs/apk/debug/*.apk
+          fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
