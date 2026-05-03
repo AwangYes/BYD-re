@@ -21,7 +21,11 @@ jobs:
           java-version: '17'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y android-sdk
+          echo "y" | sudo sdkmanager --licenses > /dev/null 2>&1 || true
+          sudo sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
 
       - name: Build debug APK
         run: |
