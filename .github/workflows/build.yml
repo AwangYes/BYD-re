@@ -35,21 +35,24 @@ jobs:
           $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
 
       - name: Create local.properties
-        run: echo "sdk.dir=$HOME/android-sdk" > xposed/local.properties
+        run: |
+          echo "sdk.dir=$HOME/android-sdk" > xposed/local.properties
+          cat xposed/local.properties
 
       - name: Build debug APK
         run: |
           cd xposed
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --info 2>&1 | tail -50
 
-      - name: List build outputs
+      - name: Find APK location
         run: |
-          ls -la xposed/app/build/outputs/apk/debug/
-          find xposed/app/build/outputs -name "*.apk" 2>/dev/null
+          find . -name "*.apk" -type f 2>/dev/null
+          ls -la app/build/outputs/apk/debug/ 2>/dev/null || echo "app/build/outputs/apk/debug/ not found"
+          ls -la xposed/app/build/outputs/apk/debug/ 2>/dev/null || echo "xposed/app/build/outputs/apk/debug/ not found"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: BYD-Xposed-Hook-debug
-          path: xposed/app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/debug/*.apk
