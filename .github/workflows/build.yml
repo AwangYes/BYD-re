@@ -1,4 +1,4 @@
-name: Build APK
+name: Build and Release APK
 
 on:
   push:
@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
 
     steps:
       - name: Checkout
@@ -43,16 +44,17 @@ jobs:
         run: |
           cd xposed
           chmod +x gradlew
-          ./gradlew assembleDebug --info 2>&1 | tail -50
+          ./gradlew assembleDebug
 
-      - name: Find APK location
-        run: |
-          find . -name "*.apk" -type f 2>/dev/null
-          ls -la app/build/outputs/apk/debug/ 2>/dev/null || echo "app/build/outputs/apk/debug/ not found"
-          ls -la xposed/app/build/outputs/apk/debug/ 2>/dev/null || echo "xposed/app/build/outputs/apk/debug/ not found"
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: BYD-Xposed-Hook-debug
-          path: xposed/build/outputs/apk/debug/*.apk
+          tag_name: v1.0.${{ github.run_number }}
+          release_name: BYD Xposed Hook v1.0.${{ github.run_number }}
+          draft: false
+          prerelease: false
+          artifacts: xposed/build/outputs/apk/debug/*.apk
+          artifact_errors_fail_upload: true
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
