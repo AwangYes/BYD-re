@@ -20,14 +20,23 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
+      - name: Download Android SDK Command-line Tools
         run: |
-          sudo apt-get update
-          sudo apt-get install -y android-sdk
-          echo "y" | sudo sdkmanager --licenses > /dev/null 2>&1 || true
-          sudo sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          cd $HOME/android-sdk/cmdline-tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
+          unzip -q cmdline-tools.zip
+          mv cmdline-tools latest
+          rm cmdline-tools.zip
+
+      - name: Accept licenses and install SDK components
+        run: |
+          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1
+          $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
 
       - name: Build debug APK
+        env:
+          ANDROID_HOME: $HOME/android-sdk
         run: |
           cd xposed
           chmod +x gradlew
