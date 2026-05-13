@@ -200,9 +200,13 @@ public final class CryptoToolHook {
         int hooked = 0;
         for (Method method : clazz.getDeclaredMethods()) {
             method.setAccessible(true);
-            hookMember(method, createClassMethodHook(className, method.getName(), clazz.getClassLoader()));
-            hooked += 1;
-            logInfo("Hook catalog " + className + "#" + formatMethodSignature(method));
+            try {
+                hookMember(method, createClassMethodHook(className, method.getName(), clazz.getClassLoader()));
+                hooked += 1;
+                logInfo("Hook catalog " + className + "#" + formatMethodSignature(method));
+            } catch (Throwable t) {
+                logInfo("Hook failed for " + className + "#" + method.getName() + ": " + t.getMessage());
+            }
         }
         if (hooked == 0) {
             logInfo("No methods found for " + clazz.getName() + "#*");
@@ -218,8 +222,12 @@ public final class CryptoToolHook {
                     continue;
                 }
                 method.setAccessible(true);
-                hookMember(method, hook);
-                hooked += 1;
+                try {
+                    hookMember(method, hook);
+                    hooked += 1;
+                } catch (Throwable t) {
+                    logInfo("hookAllMethodsCompat failed for " + current.getName() + "#" + methodName + ": " + t.getMessage());
+                }
             }
         }
         if (hooked == 0) {
@@ -273,17 +281,30 @@ public final class CryptoToolHook {
     }
 
     private static void hookMember(Member member, XC_MethodHook callback) throws Throwable {
-        Method bridge = hookBridgeMethod;
-        if (bridge == null) {
-            bridge = XposedBridge.class.getDeclaredMethod(
-                    "hookMethod",
-                    Member.class,
-                    XC_MethodHook.class
-            );
-            bridge.setAccessible(true);
-            hookBridgeMethod = bridge;
+        if (member == null || callback == null) {
+            logInfo("hookMember skipped - null member or callback");
+            return;
         }
-        bridge.invoke(null, member, callback);
+        try {
+            Method bridge = hookBridgeMethod;
+            if (bridge == null) {
+                bridge = XposedBridge.class.getDeclaredMethod(
+                        "hookMethod",
+                        Member.class,
+                        XC_MethodHook.class
+                );
+                bridge.setAccessible(true);
+                hookBridgeMethod = bridge;
+            }
+            bridge.invoke(null, member, callback);
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause != null) {
+                logInfo("hookMember InvocationTargetException: " + cause.getMessage());
+            }
+        } catch (Throwable t) {
+            logInfo("hookMember failed: " + t.getMessage());
+        }
     }
 
     private static String formatArgs(Object[] args) {
@@ -1794,7 +1815,29 @@ public final class CryptoToolHook {
             nativeDumped = true;
         }
 
-        logInfo("Native dump skipped - disabled for Zygisk compatibility");
+        try {
+            Application app = getApplicationSafe();
+            if (app == null) {
+                logError("Native dump skipped - application context missing");
+                return;
+            }
+            File outDir = new File(app.getFilesDir(), "byd-native-dumps");
+            if (!outDir.exists() && !outDir.mkdirs()) {
+                logError("Native dump skipped - cannot create " + outDir.getAbsolutePath());
+                return;
+            }
+            Map<String, List<MapSegment>> segments = collectNativeSegments();
+            if (segments.isEmpty()) {
+                logInfo("Native dump: no candidate segments found");
+                return;
+            }
+            for (Map.Entry<String, List<MapSegment>> entry : segments.entrySet()) {
+                dumpNativeLibrary(entry.getKey(), entry.getValue(), outDir);
+            }
+            logInfo("Native dump complete");
+        } catch (Throwable t) {
+            logError("Native dump failed - " + Log.getStackTraceString(t));
+        }
     }
 
     private static Map<String, List<MapSegment>> collectNativeSegments() throws IOException {
