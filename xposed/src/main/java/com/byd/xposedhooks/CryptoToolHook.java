@@ -1794,29 +1794,7 @@ public final class CryptoToolHook {
             nativeDumped = true;
         }
 
-        try {
-            Application app = getApplicationSafe();
-            if (app == null) {
-                logError("Native dump skipped - application context missing");
-                return;
-            }
-            File outDir = new File(app.getFilesDir(), "byd-native-dumps");
-            if (!outDir.exists() && !outDir.mkdirs()) {
-                logError("Native dump skipped - cannot create " + outDir.getAbsolutePath());
-                return;
-            }
-            Map<String, List<MapSegment>> segments = collectNativeSegments();
-            if (segments.isEmpty()) {
-                logInfo("Native dump: no candidate segments found");
-                return;
-            }
-            for (Map.Entry<String, List<MapSegment>> entry : segments.entrySet()) {
-                dumpNativeLibrary(entry.getKey(), entry.getValue(), outDir);
-            }
-            logInfo("Native dump complete");
-        } catch (Throwable t) {
-            logError("Native dump failed - " + Log.getStackTraceString(t));
-        }
+        logInfo("Native dump skipped - disabled for Zygisk compatibility");
     }
 
     private static Map<String, List<MapSegment>> collectNativeSegments() throws IOException {
